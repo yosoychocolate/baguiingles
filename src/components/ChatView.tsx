@@ -319,7 +319,7 @@ function MessageBlock({
   return (
     <>
       {tutor?.teach ? (
-        <div className="extras" style={{ marginLeft: 44 }}>
+        <div className="extras">
           <div className="card lesson">
             <h3>{tutor.praise || 'Almost! ❤️'}</h3>
             {tutor.pedagogy.errorType !== 'none' ? (

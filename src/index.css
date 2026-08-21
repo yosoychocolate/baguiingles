@@ -19,6 +19,7 @@
   --radius: 22px;
   --font: 'Outfit', system-ui, sans-serif;
   --serif: 'Fraunces', Georgia, serif;
+  --safe-t: env(safe-area-inset-top, 0px);
   --safe-b: env(safe-area-inset-bottom, 0px);
 }
 
@@ -32,6 +33,7 @@ body,
   min-height: 100dvh;
   margin: 0;
   background: #0b1210;
+  overflow-x: hidden;
 }
 
 body {
@@ -60,6 +62,12 @@ select {
   font: inherit;
   color: inherit;
   color-scheme: dark;
+}
+
+input,
+textarea,
+select {
+  font-size: 16px;
 }
 
 button {
@@ -181,6 +189,7 @@ button {
   display: flex;
   flex-direction: column;
   height: 100dvh;
+  min-height: 0;
 }
 
 .chat-head,
@@ -189,7 +198,7 @@ button {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding: 16px 22px;
+  padding: calc(12px + var(--safe-t)) 22px 16px;
   border-bottom: 1px solid var(--line);
 }
 
@@ -197,6 +206,7 @@ button {
   flex: 1;
   overflow: auto;
   padding: 22px;
+  -webkit-overflow-scrolling: touch;
 }
 
 .page h2,
@@ -213,12 +223,15 @@ button {
   display: flex;
   flex-direction: column;
   gap: 16px;
+  min-height: 0;
+  -webkit-overflow-scrolling: touch;
 }
 
 .bubble-row {
   display: flex;
   gap: 10px;
   align-items: flex-end;
+  max-width: 100%;
 }
 
 .bubble-row.user {
@@ -239,11 +252,13 @@ button {
 }
 
 .bubble {
-  max-width: min(680px, 86%);
+  max-width: min(680px, calc(100% - 44px));
   padding: 12px 14px;
   border-radius: 18px;
   line-height: 1.5;
   border: 1px solid var(--line);
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .bubble.maya {
@@ -254,6 +269,7 @@ button {
 .bubble.user {
   background: var(--user);
   border-top-right-radius: 6px;
+  max-width: min(680px, 88%);
 }
 
 .bubble .meta {
@@ -276,7 +292,7 @@ button {
 }
 
 .extras {
-  max-width: min(680px, 86%);
+  max-width: min(680px, 100%);
   margin-left: 44px;
   display: grid;
   gap: 8px;
@@ -333,6 +349,7 @@ button {
   border-radius: 999px;
   padding: 8px 12px;
   font-size: 0.88rem;
+  max-width: 100%;
 }
 
 .vocab-chip {
@@ -369,9 +386,10 @@ textarea {
   border: 0;
   background: transparent;
   min-height: 44px;
-  max-height: 160px;
+  max-height: 120px;
   padding: 10px 8px;
   outline: none;
+  width: 0;
 }
 
 .icon-btn,
@@ -382,6 +400,7 @@ textarea {
   display: grid;
   place-items: center;
   border: 0;
+  flex-shrink: 0;
 }
 
 .send,
@@ -417,12 +436,12 @@ textarea {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  padding: 0 8px 10px;
+  padding: 0 14px 10px;
 }
 
 .grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(220px, 100%), 1fr));
   gap: 12px;
 }
 
@@ -462,7 +481,8 @@ textarea {
   min-height: 100dvh;
   display: grid;
   place-items: center;
-  padding: 24px;
+  padding: calc(16px + var(--safe-t)) 16px calc(16px + var(--safe-b));
+  overflow: auto;
 }
 
 .ob-card {
@@ -504,6 +524,7 @@ textarea {
   border-radius: 14px;
   padding: 12px 14px;
   outline: none;
+  width: 100%;
 }
 
 .field input:focus,
@@ -741,37 +762,57 @@ textarea:focus {
 }
 
 @media (max-width: 860px) {
+  html,
+  body,
+  #root,
   .app {
-    grid-template-columns: 1fr;
-    padding-bottom: calc(68px + var(--safe-b));
+    height: 100dvh;
+    min-height: 100dvh;
+    max-height: 100dvh;
+  }
+
+  .app {
+    display: flex;
+    flex-direction: column;
+    grid-template-columns: unset;
+    padding-bottom: 0;
   }
 
   .sidebar {
     display: none;
   }
 
+  .main {
+    flex: 1;
+    height: auto;
+    min-height: 0;
+  }
+
   .mobile-nav {
     display: flex;
-    position: fixed;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    padding: 8px 8px calc(8px + var(--safe-b));
-    background: rgba(11, 18, 16, 0.92);
+    position: relative;
+    flex-shrink: 0;
+    left: auto;
+    right: auto;
+    bottom: auto;
+    padding: 6px 6px calc(8px + var(--safe-b));
+    background: rgba(11, 18, 16, 0.96);
     border-top: 1px solid var(--line);
     backdrop-filter: blur(16px);
     z-index: 5;
-    justify-content: space-around;
+    justify-content: space-between;
+    gap: 4px;
   }
 
   .mobile-nav button {
     flex: 1;
+    min-width: 0;
     color: var(--muted);
-    font-size: 0.7rem;
+    font-size: 0.68rem;
     display: grid;
     gap: 2px;
     justify-items: center;
-    padding: 6px;
+    padding: 8px 2px;
     border-radius: 12px;
   }
 
@@ -781,18 +822,60 @@ textarea:focus {
   }
 
   .chat-head,
-  .page-head,
+  .page-head {
+    padding: calc(10px + var(--safe-t)) 12px 12px;
+  }
+
   .page,
   .chat {
-    padding-left: 14px;
-    padding-right: 14px;
+    padding: 12px;
+  }
+
+  .composer {
+    padding: 8px 12px 10px;
+  }
+
+  .banner {
+    margin: 0 12px;
+    font-size: 0.82rem;
   }
 
   .extras {
     margin-left: 0;
   }
 
+  .suggestions {
+    padding: 0 12px 8px;
+  }
+
   .ob-card {
-    padding: 22px;
+    padding: 18px 16px;
+    border-radius: 22px;
+  }
+
+  .ob-card h2 {
+    font-size: 1.55rem;
+  }
+
+  .stats {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .choice {
+    padding: 10px 12px;
+  }
+
+  .row-actions {
+    flex-wrap: wrap;
+  }
+}
+
+@media (max-width: 400px) {
+  .bubble.user {
+    max-width: 92%;
+  }
+
+  .flash h3 {
+    font-size: 1.6rem;
   }
 }

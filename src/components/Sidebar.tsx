@@ -9,12 +9,12 @@ type Props = {
   onNewChat: () => void
 }
 
-const items: { id: View; label: string; icon: string }[] = [
-  { id: 'chat', label: 'Conversa', icon: '💬' },
-  { id: 'scenarios', label: 'Cenários', icon: '🎭' },
-  { id: 'vocab', label: 'Vocabulário', icon: '📘' },
-  { id: 'progress', label: 'Progresso', icon: '🔥' },
-  { id: 'settings', label: 'Ajustes', icon: '⚙️' },
+const items: { id: View; label: string; short: string; icon: string }[] = [
+  { id: 'chat', label: 'Conversa', short: 'Falar', icon: '💬' },
+  { id: 'scenarios', label: 'Cenários', short: 'Cenas', icon: '🎭' },
+  { id: 'vocab', label: 'Vocabulário', short: 'Vocab', icon: '📘' },
+  { id: 'progress', label: 'Progresso', short: 'Nível', icon: '🔥' },
+  { id: 'settings', label: 'Ajustes', short: 'Ajustes', icon: '⚙️' },
 ]
 
 export function Sidebar({ view, profile, streak, onView, onNewChat }: Props) {
@@ -62,7 +62,7 @@ export function MobileNav({ view, onView }: { view: View; onView: (view: View) =
           onClick={() => onView(item.id)}
         >
           <span>{item.icon}</span>
-          {item.label}
+          {item.short}
         </button>
       ))}
     </nav>
