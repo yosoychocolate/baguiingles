@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#0c1412" />
+    <meta name="description" content="Maya — converse em inglês com I.A. e aprenda na prática." />
+    <title>Maya — Inglês com I.A.</title>
+    <style>
+      html, body, #root { min-height: 100dvh; margin: 0; background: #0b1210; color: #f3efe4; }
+      #boot-error {
+        display: none;
+        max-width: 520px;
+        margin: 12vh auto;
+        padding: 28px;
+        font-family: system-ui, sans-serif;
+        line-height: 1.5;
+      }
+      #boot-error h1 { font-size: 1.6rem; }
+      #boot-error a { color: #5ee0a0; }
+      #boot-error code { background: #1b2b26; padding: 2px 6px; border-radius: 6px; }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <div id="boot-error">
+      <h1>Não abra o arquivo HTML direto</h1>
+      <p>O Maya precisa do servidor de desenvolvimento. No terminal da pasta do projeto, rode:</p>
+      <p><code>npm run dev</code></p>
+      <p>Depois abra <a href="http://localhost:5173/">http://localhost:5173/</a> no Chrome ou Edge.</p>
+    </div>
+    <script>
+      if (location.protocol === 'file:') {
+        location.replace('http://localhost:5173/')
+        document.getElementById('boot-error').style.display = 'block'
+      }
+    </script>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
