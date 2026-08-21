@@ -27,7 +27,7 @@ async function groqChat(apiKey: string, systemPrompt: string, messages: ChatTurn
       : [{ role: 'user' as const, content: 'Start the conversation now.' }]),
   ]
 
-  const models = ['llama-3.3-70b-versatile', 'llama-3.1-8b-instant', 'gemma2-9b-it']
+  const models = ['openai/gpt-oss-120b']
   let lastError = 'Groq indisponível.'
 
   for (const model of models) {
