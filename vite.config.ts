@@ -1,3 +1,5 @@
+import { copyFileSync } from 'node:fs'
+import { resolve } from 'node:path'
 import { defineConfig, loadEnv, type Connect, type Plugin } from 'vite'
 import react from '@vitejs/plugin-react'
 import { handleChat } from './server/chat.ts'
@@ -23,6 +25,20 @@ function mayaApi(): Plugin {
   }
 }
 
+function githubPages(): Plugin {
+  return {
+    name: 'maya-github-pages',
+    writeBundle() {
+      const index = resolve('docs/index.html')
+      try {
+        copyFileSync(index, resolve('docs/404.html'))
+      } catch {
+        /* build folder still empty */
+      }
+    },
+  }
+}
+
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
   process.env.GROQ_API_KEY ||= env.GROQ_API_KEY || ''
@@ -30,7 +46,12 @@ export default defineConfig(({ mode }) => {
   process.env.OPENAI_API_KEY ||= env.OPENAI_API_KEY || ''
 
   return {
-    plugins: [react(), mayaApi()],
+    base: './',
+    plugins: [react(), mayaApi(), githubPages()],
+    build: {
+      outDir: 'docs',
+      emptyOutDir: true,
+    },
     server: {
       port: 5173,
       host: true,

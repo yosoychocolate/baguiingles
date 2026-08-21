@@ -1,0 +1,16 @@
+{
+  "name": "Maya — Inglês com I.A.",
+  "short_name": "Maya",
+  "icons": [
+    {
+      "src": "apple-touch-icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ],
+  "theme_color": "#0c1412",
+  "background_color": "#0b1210",
+  "display": "standalone",
+  "start_url": "./"
+}

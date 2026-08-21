@@ -1,4 +1,5 @@
 import type { ChatMessage, ErrorPattern, Level, Provider, Scenario } from '../types'
+import { completeChat } from './providers'
 import { buildSystemPrompt } from './prompt'
 
 type AnalyzeInput = {
@@ -32,6 +33,30 @@ async function tryChromeAi(systemPrompt: string, history: ChatMessage[], userMes
   }
 }
 
+function isLocalHost() {
+  const host = window.location.hostname
+  return host === 'localhost' || host === '127.0.0.1'
+}
+
+async function viaLocalProxy(input: {
+  provider: Provider
+  apiKey: string
+  systemPrompt: string
+  messages: { role: 'user' | 'assistant'; content: string }[]
+  userMessage: string | null
+}): Promise<string> {
+  const response = await fetch('/api/chat', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(input),
+  })
+  const data = (await response.json()) as { text?: string; error?: string }
+  if (!response.ok) {
+    throw new Error(data.error || 'Falha ao falar com a I.A.')
+  }
+  return data.text || ''
+}
+
 /** Calls the language model and returns raw JSON text. Parsing and pedagogy happen elsewhere. */
 export async function analyzeUtterance(input: AnalyzeInput): Promise<string> {
   const systemPrompt = buildSystemPrompt({
@@ -52,21 +77,24 @@ export async function analyzeUtterance(input: AnalyzeInput): Promise<string> {
     if (local) return local
   }
 
-  const response = await fetch('/api/chat', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      provider: input.provider,
-      apiKey: input.apiKey,
-      systemPrompt,
-      messages: history,
-      userMessage: input.userMessage,
-    }),
-  })
-
-  const data = (await response.json()) as { text?: string; error?: string }
-  if (!response.ok) {
-    throw new Error(data.error || 'Falha ao falar com a I.A.')
+  const payload = {
+    provider: input.provider,
+    apiKey: input.apiKey,
+    systemPrompt,
+    messages: history,
+    userMessage: input.userMessage,
   }
-  return data.text || ''
+
+  if (isLocalHost()) {
+    try {
+      return await viaLocalProxy(payload)
+    } catch (error) {
+      if (input.apiKey) {
+        return completeChat(payload)
+      }
+      throw error
+    }
+  }
+
+  return completeChat(payload)
 }

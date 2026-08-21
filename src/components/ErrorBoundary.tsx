@@ -32,7 +32,7 @@ export class ErrorBoundary extends Component<Props, State> {
                 } catch {
                   /* ignore */
                 }
-                location.href = '/'
+                location.reload()
               }}
             >
               Recarregar
