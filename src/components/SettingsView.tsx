@@ -29,15 +29,19 @@ export function SettingsView({ profile, settings, onProfile, onSettings, onReset
       </div>
 
       <div className="card help">
-        <h3>{server?.ready ? 'Groq ligada no servidor' : 'Chave Groq (arquivo .env)'}</h3>
+        <h3>{server?.ready ? 'I.A. ligada no servidor' : 'Servidor da I.A.'}</h3>
         <p style={{ margin: 0, color: 'var(--muted)' }}>
-          1. Abra o arquivo <code>.env</code> na pasta do projeto
-          <br />
-          2. Cole a chave em <code>GROQ_API_KEY=</code> (sem aspas)
-          <br />
-          3. Rode <code>npm run dev</code> e abra localhost
-          <br />
-          4. Não envie a chave no chat, no GitHub nem em Ajustes
+          {server?.ready ? (
+            <>
+              A Groq responde pelo backend ({server.provider}). A chave fica só no servidor — nunca no navegador.
+            </>
+          ) : (
+            <>
+              Local: coloque <code>GROQ_API_KEY</code> no arquivo <code>.env</code> e rode <code>npm run dev</code>.
+              <br />
+              Online: hospede o backend no Render e configure a chave como variável secreta lá.
+            </>
+          )}
         </p>
       </div>
 

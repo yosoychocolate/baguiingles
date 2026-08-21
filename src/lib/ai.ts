@@ -1,4 +1,5 @@
 import type { ChatMessage, ErrorPattern, Level, Provider, Scenario } from '../types'
+import { apiUrl } from './apiBase'
 import { buildSystemPrompt } from './prompt'
 
 type AnalyzeInput = {
@@ -33,7 +34,7 @@ async function tryChromeAi(systemPrompt: string, history: ChatMessage[], userMes
 
 export async function getAiStatus(): Promise<{ ready: boolean; provider: string }> {
   try {
-    const response = await fetch('/api/status')
+    const response = await fetch(apiUrl('/api/status'))
     const data = (await response.json()) as { ready?: boolean; provider?: string }
     if (!response.ok) return { ready: false, provider: 'groq' }
     return { ready: Boolean(data.ready), provider: data.provider || 'groq' }
@@ -42,7 +43,7 @@ export async function getAiStatus(): Promise<{ ready: boolean; provider: string 
   }
 }
 
-/** Calls the language model via the local proxy. The API key never leaves the server. */
+/** Calls the language model via the backend proxy. The API key never leaves the server. */
 export async function analyzeUtterance(input: AnalyzeInput): Promise<string> {
   const systemPrompt = buildSystemPrompt({
     name: input.name,
@@ -60,7 +61,7 @@ export async function analyzeUtterance(input: AnalyzeInput): Promise<string> {
   const local = await tryChromeAi(systemPrompt, input.history, input.userMessage)
   if (local) return local
 
-  const response = await fetch('/api/chat', {
+  const response = await fetch(apiUrl('/api/chat'), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({

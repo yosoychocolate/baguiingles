@@ -192,7 +192,7 @@ export function localGreeting(name: string, level: Level): EngineResult {
   }
   const result = decide(analysis, ctx)
   result.tutor.tip =
-    'Abra a Maya com npm run dev para a I.A. valer de verdade. A chave Groq fica no servidor, não no navegador.'
+    'A I.A. responde pelo servidor. Local: npm run dev. Online: backend no Render com a chave Groq secreta.'
   return result
 }
 

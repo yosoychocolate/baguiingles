@@ -8,7 +8,28 @@ type ChatBody = {
   userMessage?: string | null
 }
 
-function send(res: ServerResponse, status: number, payload: unknown) {
+function allowedOrigins(): string[] {
+  const raw = process.env.MAYA_ALLOWED_ORIGINS || '*'
+  return raw.split(',').map((item) => item.trim()).filter(Boolean)
+}
+
+function applyCors(req: IncomingMessage, res: ServerResponse) {
+  const origin = req.headers.origin || ''
+  const allowed = allowedOrigins()
+  if (allowed.includes('*')) {
+    res.setHeader('Access-Control-Allow-Origin', origin || '*')
+  } else if (origin && allowed.some((item) => origin === item || origin.startsWith(`${item}/`))) {
+    res.setHeader('Access-Control-Allow-Origin', origin)
+  } else if (origin && allowed.some((item) => item.endsWith('.github.io') && origin.endsWith('.github.io'))) {
+    res.setHeader('Access-Control-Allow-Origin', origin)
+  }
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type')
+  res.setHeader('Vary', 'Origin')
+}
+
+function send(req: IncomingMessage, res: ServerResponse, status: number, payload: unknown) {
+  applyCors(req, res)
   res.statusCode = status
   res.setHeader('Content-Type', 'application/json; charset=utf-8')
   res.end(JSON.stringify(payload))
@@ -45,12 +66,13 @@ function pathname(req: IncomingMessage): string {
 export async function handleApi(req: IncomingMessage, res: ServerResponse) {
   const path = pathname(req)
   if (req.method === 'OPTIONS') {
+    applyCors(req, res)
     res.statusCode = 204
     res.end()
     return
   }
   if (path === '/api/status' || path === '/api/status/') {
-    send(res, 200, {
+    send(req, res, 200, {
       ready: Boolean(envKey(configuredProvider())),
       provider: configuredProvider(),
     })
@@ -60,12 +82,12 @@ export async function handleApi(req: IncomingMessage, res: ServerResponse) {
     await handleChat(req, res)
     return
   }
-  send(res, 404, { error: 'Rota não encontrada.' })
+  send(req, res, 404, { error: 'Rota não encontrada.' })
 }
 
 async function handleChat(req: IncomingMessage, res: ServerResponse) {
   if (req.method !== 'POST') {
-    send(res, 405, { error: 'Use POST.' })
+    send(req, res, 405, { error: 'Use POST.' })
     return
   }
 
@@ -73,13 +95,20 @@ async function handleChat(req: IncomingMessage, res: ServerResponse) {
   try {
     body = JSON.parse(await readBody(req)) as ChatBody
   } catch {
-    send(res, 400, { error: 'JSON inválido.' })
+    send(req, res, 400, { error: 'JSON inválido.' })
     return
   }
 
   const requested = (body.provider || configuredProvider()).toLowerCase()
   const provider = envKey(requested) ? requested : configuredProvider()
   const apiKey = envKey(provider).trim()
+
+  if (!apiKey) {
+    send(req, res, 503, {
+      error: 'A I.A. não está configurada no servidor. Adicione GROQ_API_KEY nas variáveis secretas da hospedagem.',
+    })
+    return
+  }
 
   try {
     const text = await completeChat({
@@ -89,10 +118,10 @@ async function handleChat(req: IncomingMessage, res: ServerResponse) {
       messages: body.messages,
       userMessage: body.userMessage ?? null,
     })
-    send(res, 200, { text })
+    send(req, res, 200, { text })
   } catch (error) {
     const status = typeof error === 'object' && error && 'status' in error ? Number(error.status) : 502
     const message = error instanceof Error ? error.message : 'Falha ao chamar a I.A.'
-    send(res, status || 502, { error: message })
+    send(req, res, status || 502, { error: message })
   }
 }

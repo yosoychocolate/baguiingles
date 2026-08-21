@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: maya-api
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm run start:api
+    healthCheckPath: /api/status
+    envVars:
+      - key: NODE_VERSION
+        value: '22'
+      - key: GROQ_API_KEY
+        sync: false
+      - key: MAYA_ALLOWED_ORIGINS
+        value: https://yasoychocolate.github.io,http://localhost:5173

@@ -188,7 +188,8 @@ export function ChatView({
 
       {aiReady === false ? (
         <div className="banner">
-          A Maya de verdade roda com <code>npm run dev</code>. A chave Groq fica no arquivo .env, no servidor — não no GitHub e não no navegador.
+          A I.A. ainda não está ligada. No PC: <code>.env</code> + <code>npm run dev</code>. Na internet: backend no Render com{' '}
+          <code>GROQ_API_KEY</code> secreta.
         </div>
       ) : null}
       {coach ? <div className="banner">{coach}</div> : null}

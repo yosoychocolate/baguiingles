@@ -27,7 +27,7 @@ async function groqChat(apiKey: string, systemPrompt: string, messages: ChatTurn
       : [{ role: 'user' as const, content: 'Start the conversation now.' }]),
   ]
 
-  const models = ['openai/gpt-oss-120b']
+  const models = ['llama-3.3-70b-versatile', 'llama-3.1-8b-instant', 'gemma2-9b-it']
   let lastError = 'Groq indisponível.'
 
   for (const model of models) {
@@ -140,7 +140,7 @@ export async function completeChat(input: CompleteChatInput): Promise<string> {
   const provider = (input.provider || 'groq').toLowerCase()
   const apiKey = input.apiKey.trim()
   if (!apiKey) {
-    throw new Error('A Groq não está configurada no servidor. Coloque GROQ_API_KEY no arquivo .env e rode npm run dev.')
+    throw new Error('A Groq não está configurada no servidor. Adicione GROQ_API_KEY nas variáveis secretas da hospedagem.')
   }
   if (!input.systemPrompt) {
     throw new Error('Prompt ausente.')
@@ -157,7 +157,7 @@ export async function completeChat(input: CompleteChatInput): Promise<string> {
   } catch (error) {
     if (error instanceof TypeError) {
       throw new Error(
-        'A I.A. só responde pelo servidor local. Abra a Maya com npm run dev. A chave não vai no navegador.',
+        'Não consegui falar com o servidor da Maya. Confira se o backend está online e se VITE_API_URL está certo.',
       )
     }
     throw error
