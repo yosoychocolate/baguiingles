@@ -1,4 +1,6 @@
-import type { Profile, Provider, Settings } from '../types'
+import { useEffect, useState } from 'react'
+import type { Profile, Settings } from '../types'
+import { getAiStatus } from '../lib/ai'
 
 type Props = {
   profile: Profile
@@ -9,61 +11,34 @@ type Props = {
 }
 
 export function SettingsView({ profile, settings, onProfile, onSettings, onReset }: Props) {
+  const [server, setServer] = useState<{ ready: boolean; provider: string } | null>(null)
+
+  useEffect(() => {
+    void getAiStatus().then(setServer)
+  }, [])
+
   return (
     <div className="page">
       <div className="page-head" style={{ padding: 0, border: 0, marginBottom: 8 }}>
         <div>
           <h2 style={{ margin: '0 0 4px' }}>Ajustes</h2>
           <p style={{ margin: 0, color: 'var(--muted)' }}>
-            Conecte uma I.A. grátis para conversas reais com a Maya.
+            A Maya fala com a Groq pelo servidor. A chave não entra no navegador.
           </p>
         </div>
       </div>
 
       <div className="card help">
-        <h3>Chave de I.A. (Groq, recomendado)</h3>
-        <p style={{ margin: '0 0 8px', color: 'var(--muted)' }}>
-          1. Abra{' '}
-          <a href="https://console.groq.com/keys" target="_blank" rel="noreferrer">
-            console.groq.com/keys
-          </a>
-          <br />
-          2. Crie uma conta e clique em Create API Key
-          <br />
-          3. Cole a chave abaixo. Ela fica só neste computador.
-        </p>
+        <h3>{server?.ready ? 'Groq ligada no servidor' : 'Chave Groq (arquivo .env)'}</h3>
         <p style={{ margin: 0, color: 'var(--muted)' }}>
-          Alternativa grátis:{' '}
-          <a href="https://aistudio.google.com/apikey" target="_blank" rel="noreferrer">
-            Google Gemini
-          </a>
-          . OpenAI também funciona.
+          1. Abra o arquivo <code>.env</code> na pasta do projeto
+          <br />
+          2. Cole a chave em <code>GROQ_API_KEY=</code> (sem aspas)
+          <br />
+          3. Rode <code>npm run dev</code> e abra localhost
+          <br />
+          4. Não envie a chave no chat, no GitHub nem em Ajustes
         </p>
-      </div>
-
-      <div className="field">
-        <label htmlFor="provider">Provedor</label>
-        <select
-          id="provider"
-          value={settings.provider}
-          onChange={(e) => onSettings({ ...settings, provider: e.target.value as Provider })}
-        >
-          <option value="groq">Groq (Llama, grátis e rápido)</option>
-          <option value="gemini">Google Gemini</option>
-          <option value="openai">OpenAI</option>
-        </select>
-      </div>
-
-      <div className="field">
-        <label htmlFor="key">Chave de API</label>
-        <input
-          id="key"
-          type="password"
-          autoComplete="off"
-          placeholder="gsk_... ou AIza... ou sk-..."
-          value={settings.apiKey}
-          onChange={(e) => onSettings({ ...settings, apiKey: e.target.value.trim() })}
-        />
       </div>
 
       <div className="field">

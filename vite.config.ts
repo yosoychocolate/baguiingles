@@ -2,16 +2,16 @@ import { copyFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { defineConfig, loadEnv, type Connect, type Plugin } from 'vite'
 import react from '@vitejs/plugin-react'
-import { handleChat } from './server/chat.ts'
+import { handleApi } from './server/chat.ts'
 
 function mayaApi(): Plugin {
   const middleware: Connect.NextHandleFunction = (req, res, next) => {
-    const url = req.url || ''
-    if (!url.startsWith('/api/chat')) {
+    const url = (req.url || '').split('?')[0]
+    if (!url.startsWith('/api/')) {
       next()
       return
     }
-    void handleChat(req, res)
+    void handleApi(req, res)
   }
 
   return {

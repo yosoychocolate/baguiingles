@@ -1,10 +1,8 @@
 import type { ChatMessage, ErrorPattern, Level, Provider, Scenario } from '../types'
-import { completeChat } from './providers'
 import { buildSystemPrompt } from './prompt'
 
 type AnalyzeInput = {
   provider: Provider
-  apiKey: string
   name: string
   level: Level
   goal: string
@@ -33,31 +31,18 @@ async function tryChromeAi(systemPrompt: string, history: ChatMessage[], userMes
   }
 }
 
-function isLocalHost() {
-  const host = window.location.hostname
-  return host === 'localhost' || host === '127.0.0.1'
-}
-
-async function viaLocalProxy(input: {
-  provider: Provider
-  apiKey: string
-  systemPrompt: string
-  messages: { role: 'user' | 'assistant'; content: string }[]
-  userMessage: string | null
-}): Promise<string> {
-  const response = await fetch('/api/chat', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(input),
-  })
-  const data = (await response.json()) as { text?: string; error?: string }
-  if (!response.ok) {
-    throw new Error(data.error || 'Falha ao falar com a I.A.')
+export async function getAiStatus(): Promise<{ ready: boolean; provider: string }> {
+  try {
+    const response = await fetch('/api/status')
+    const data = (await response.json()) as { ready?: boolean; provider?: string }
+    if (!response.ok) return { ready: false, provider: 'groq' }
+    return { ready: Boolean(data.ready), provider: data.provider || 'groq' }
+  } catch {
+    return { ready: false, provider: 'groq' }
   }
-  return data.text || ''
 }
 
-/** Calls the language model and returns raw JSON text. Parsing and pedagogy happen elsewhere. */
+/** Calls the language model via the local proxy. The API key never leaves the server. */
 export async function analyzeUtterance(input: AnalyzeInput): Promise<string> {
   const systemPrompt = buildSystemPrompt({
     name: input.name,
@@ -72,29 +57,23 @@ export async function analyzeUtterance(input: AnalyzeInput): Promise<string> {
     content: m.content,
   }))
 
-  if (!input.apiKey) {
-    const local = await tryChromeAi(systemPrompt, input.history, input.userMessage)
-    if (local) return local
-  }
+  const local = await tryChromeAi(systemPrompt, input.history, input.userMessage)
+  if (local) return local
 
-  const payload = {
-    provider: input.provider,
-    apiKey: input.apiKey,
-    systemPrompt,
-    messages: history,
-    userMessage: input.userMessage,
-  }
+  const response = await fetch('/api/chat', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      provider: input.provider,
+      systemPrompt,
+      messages: history,
+      userMessage: input.userMessage,
+    }),
+  })
 
-  if (isLocalHost()) {
-    try {
-      return await viaLocalProxy(payload)
-    } catch (error) {
-      if (input.apiKey) {
-        return completeChat(payload)
-      }
-      throw error
-    }
+  const data = (await response.json()) as { text?: string; error?: string }
+  if (!response.ok) {
+    throw new Error(data.error || 'Falha ao falar com a I.A.')
   }
-
-  return completeChat(payload)
+  return data.text || ''
 }

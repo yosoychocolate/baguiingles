@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import type { ChatMessage, Conversation, Profile, SavedWord, Settings, VocabEntry } from '../types'
 import { getScenario } from '../data/scenarios'
 import { completeTurn, localGreeting } from '../lib/learningEngine'
+import { getAiStatus } from '../lib/ai'
 import { errorTypeLabel } from '../lib/pedagogy'
 import { levelLabel } from '../lib/levels'
 import { appendMessage, uid } from '../lib/storage'
@@ -31,7 +32,8 @@ export function ChatView({
   onOpenSettings,
 }: Props) {
   const [draft, setDraft] = useState('')
-  const [busy, setBusy] = useState(conversation.messages.length === 0 && Boolean(settings.apiKey))
+  const [aiReady, setAiReady] = useState<boolean | null>(null)
+  const [busy, setBusy] = useState(conversation.messages.length === 0)
   const [listening, setListening] = useState(false)
   const [error, setError] = useState('')
   const [viaVoice, setViaVoice] = useState(false)
@@ -48,8 +50,12 @@ export function ChatView({
   }, [conversation.messages.length, busy])
 
   useEffect(() => {
-    if (conversation.messages.length > 0) return
-    if (!settings.apiKey) {
+    void getAiStatus().then((status) => setAiReady(status.ready))
+  }, [])
+
+  useEffect(() => {
+    if (conversation.messages.length > 0 || aiReady === null) return
+    if (!aiReady) {
       if (kickedOff.has(`${conversation.id}:hello`)) return
       kickedOff.add(`${conversation.id}:hello`)
       const tutor = localGreeting(profile.name, profile.level).tutor
@@ -67,7 +73,7 @@ export function ChatView({
     if (kickedOff.has(conversation.id)) return
     kickedOff.add(conversation.id)
     void runTurn(null, false)
-  }, [conversation.id, settings.apiKey])
+  }, [conversation.id, aiReady])
 
   async function runTurn(userText: string | null, voice: boolean) {
     setBusy(true)
@@ -87,7 +93,6 @@ export function ChatView({
     try {
       const result = await completeTurn({
         provider: settings.provider,
-        apiKey: settings.apiKey,
         profile,
         scenario,
         history: current.messages,
@@ -171,18 +176,19 @@ export function ChatView({
             Maya · {levelLabel(profile.level)}
           </div>
         </div>
-        <button className="icon-btn" type="button" title="Parar áudio" onClick={stopSpeaking}>
-          🔇
-        </button>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button className="icon-btn" type="button" title="Parar áudio" onClick={stopSpeaking}>
+            🔇
+          </button>
+          <button className="icon-btn" type="button" title="Ajustes" onClick={onOpenSettings}>
+            ⚙️
+          </button>
+        </div>
       </header>
 
-      {!settings.apiKey ? (
+      {aiReady === false ? (
         <div className="banner">
-          Para a Maya entender, corrigir e continuar a conversa, cole uma chave Groq em{' '}
-          <button className="ghost" type="button" onClick={onOpenSettings} style={{ padding: 0, color: 'var(--gold)' }}>
-            Ajustes
-          </button>
-          .
+          A Maya de verdade roda com <code>npm run dev</code>. A chave Groq fica no arquivo .env, no servidor — não no GitHub e não no navegador.
         </div>
       ) : null}
       {coach ? <div className="banner">{coach}</div> : null}

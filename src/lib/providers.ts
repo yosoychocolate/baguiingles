@@ -10,7 +10,7 @@ export type CompleteChatInput = {
 
 function mapProviderError(provider: string, status: number, message?: string): string {
   if (status === 401 || status === 403) {
-    return 'Chave de API inválida. Confira em Ajustes.'
+    return 'Chave de API inválida. Crie outra no console da Groq e coloque só no arquivo .env.'
   }
   if (status === 429) {
     return 'A I.A. atingiu o limite agora. Espere uns segundos e tente de novo.'
@@ -27,7 +27,7 @@ async function groqChat(apiKey: string, systemPrompt: string, messages: ChatTurn
       : [{ role: 'user' as const, content: 'Start the conversation now.' }]),
   ]
 
-  const models = ['llama-3.3-70b-versatile', 'llama-3.1-8b-instant']
+  const models = ['openai/gpt-oss-120b']
   let lastError = 'Groq indisponível.'
 
   for (const model of models) {
@@ -140,7 +140,7 @@ export async function completeChat(input: CompleteChatInput): Promise<string> {
   const provider = (input.provider || 'groq').toLowerCase()
   const apiKey = input.apiKey.trim()
   if (!apiKey) {
-    throw new Error('Adicione uma chave de API grátis (Groq ou Gemini) em Ajustes para conversar com a Maya.')
+    throw new Error('A Groq não está configurada no servidor. Coloque GROQ_API_KEY no arquivo .env e rode npm run dev.')
   }
   if (!input.systemPrompt) {
     throw new Error('Prompt ausente.')
@@ -157,7 +157,7 @@ export async function completeChat(input: CompleteChatInput): Promise<string> {
   } catch (error) {
     if (error instanceof TypeError) {
       throw new Error(
-        'O navegador bloqueou a I.A. neste site. Em Ajustes, escolha Google Gemini (grátis) e cole a chave.',
+        'A I.A. só responde pelo servidor local. Abra a Maya com npm run dev. A chave não vai no navegador.',
       )
     }
     throw error

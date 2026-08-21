@@ -3,7 +3,6 @@ import { completeChat } from '../src/lib/providers.ts'
 
 type ChatBody = {
   provider?: string
-  apiKey?: string
   systemPrompt?: string
   messages?: { role: 'user' | 'assistant'; content: string }[]
   userMessage?: string | null
@@ -32,12 +31,39 @@ function envKey(provider: string): string {
   return process.env.GROQ_API_KEY || ''
 }
 
-export async function handleChat(req: IncomingMessage, res: ServerResponse) {
+function configuredProvider(): string {
+  if (envKey('groq')) return 'groq'
+  if (envKey('gemini')) return 'gemini'
+  if (envKey('openai')) return 'openai'
+  return 'groq'
+}
+
+function pathname(req: IncomingMessage): string {
+  return (req.url || '').split('?')[0]
+}
+
+export async function handleApi(req: IncomingMessage, res: ServerResponse) {
+  const path = pathname(req)
   if (req.method === 'OPTIONS') {
     res.statusCode = 204
     res.end()
     return
   }
+  if (path === '/api/status' || path === '/api/status/') {
+    send(res, 200, {
+      ready: Boolean(envKey(configuredProvider())),
+      provider: configuredProvider(),
+    })
+    return
+  }
+  if (path === '/api/chat' || path === '/api/chat/') {
+    await handleChat(req, res)
+    return
+  }
+  send(res, 404, { error: 'Rota não encontrada.' })
+}
+
+async function handleChat(req: IncomingMessage, res: ServerResponse) {
   if (req.method !== 'POST') {
     send(res, 405, { error: 'Use POST.' })
     return
@@ -51,8 +77,9 @@ export async function handleChat(req: IncomingMessage, res: ServerResponse) {
     return
   }
 
-  const provider = (body.provider || 'groq').toLowerCase()
-  const apiKey = (body.apiKey || envKey(provider)).trim()
+  const requested = (body.provider || configuredProvider()).toLowerCase()
+  const provider = envKey(requested) ? requested : configuredProvider()
+  const apiKey = envKey(provider).trim()
 
   try {
     const text = await completeChat({

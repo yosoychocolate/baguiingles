@@ -192,13 +192,12 @@ export function localGreeting(name: string, level: Level): EngineResult {
   }
   const result = decide(analysis, ctx)
   result.tutor.tip =
-    'Cole uma chave grátis da Groq em Ajustes para a Maya analisar seu inglês de verdade.'
+    'Abra a Maya com npm run dev para a I.A. valer de verdade. A chave Groq fica no servidor, não no navegador.'
   return result
 }
 
 export async function completeTurn(input: {
   provider: Provider
-  apiKey: string
   profile: Profile
   scenario: Scenario
   history: ChatMessage[]
@@ -209,7 +208,6 @@ export async function completeTurn(input: {
   const progress = loadStore().progress
   const raw = await analyzeUtterance({
     provider: input.provider,
-    apiKey: input.apiKey,
     name: input.profile.name,
     level: input.profile.level,
     goal: input.profile.goal,
